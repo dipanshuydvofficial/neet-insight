@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEET Insight — <%= page.charAt(0).toUpperCase() + page.slice(1) %></title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --sidebar-bg: #1B1C31;
+    --bg: #F4F7FE;
+    --primary: #6366F1;
+    --primary-hover: #4F46E5;
+    --text-dark: #1B1C31;
+    --text-muted: #8A8CA5;
+    --success: #16A34A;
+    --danger: #DC2626;
+    --warning: #D97706;
+    --border: #E7E9F5;
+  }
+  * { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; box-sizing: border-box; }
+  body { background: var(--bg); margin: 0; color: var(--text-dark); }
+
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 250px;
+    background: var(--sidebar-bg);
+    color: #ffffff;
+    padding: 24px 16px;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .sidebar-brand { display: flex; align-items: center; gap: 12px; padding: 8px 8px 24px 8px; }
+  .sidebar-logo {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: linear-gradient(135deg, #FF9C00, #FFC048);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 19px; color: #fff; flex-shrink: 0;
+  }
+  .sidebar-brand-text { font-weight: 700; font-size: 15px; line-height: 1.2; }
+  .sidebar-brand-text small { display: block; font-weight: 400; font-size: 11px; color: #9294B5; }
+
+  .nav-link-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; border-radius: 10px;
+    color: #C7C9E0; text-decoration: none; font-size: 14px; font-weight: 500;
+    margin-bottom: 4px; transition: background 0.15s ease, color 0.15s ease;
+  }
+  .nav-link-item:hover { background: rgba(255,255,255,0.06); color: #ffffff; }
+  .nav-link-item.active { background: var(--primary); color: #ffffff; }
+  .nav-link-item .icon { width: 18px; text-align: center; font-size: 15px; }
+
+  .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .sidebar-user { padding: 10px 8px; font-size: 12.5px; color: #9294B5; }
+  .sidebar-user strong { display: block; color: #fff; font-size: 13.5px; }
+
+  .main-content { margin-left: 250px; flex: 1; padding: 28px 32px; width: calc(100% - 250px); }
+
+  .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+  .page-title { font-size: 22px; font-weight: 700; margin: 0; }
+  .page-subtitle { font-size: 13.5px; color: var(--text-muted); margin-top: 2px; }
+
+  .card-box { background: #fff; border-radius: 16px; padding: 20px 22px; box-shadow: 0 1px 3px rgba(27,28,49,0.06); margin-bottom: 20px; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; }
+  .kpi-card { background: #fff; border-radius: 16px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(27,28,49,0.06); }
+  .kpi-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; margin-bottom: 6px; }
+  .kpi-value { font-size: 26px; font-weight: 800; }
+  .kpi-value.positive { color: var(--success); }
+  .kpi-value.negative { color: var(--danger); }
+
+  .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 16px; margin-bottom: 20px; }
+  .chart-card { background: #fff; border-radius: 16px; padding: 20px 22px; box-shadow: 0 1px 3px rgba(27,28,49,0.06); }
+  .chart-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 14px; }
+  .chart-card canvas { max-height: 280px; }
+
+  .btn-primary-custom { background: var(--primary); border: none; color: #fff; font-weight: 600; padding: 9px 18px; border-radius: 10px; font-size: 13.5px; }
+  .btn-primary-custom:hover { background: var(--primary-hover); color: #fff; }
+
+  .table-custom { width: 100%; font-size: 13.5px; border-collapse: collapse; }
+  .table-custom thead th { text-align: left; padding: 10px 12px; color: var(--text-muted); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 2px solid var(--border); white-space: nowrap; }
+  .table-custom tbody td { padding: 10px 12px; border-bottom: 1px solid #F0F1F8; vertical-align: middle; }
+  .table-custom tbody tr:hover { background: #FAFBFF; }
+
+  .badge-status { padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
+  .badge-correct { background: #DCFCE7; color: #16A34A; }
+  .badge-wrong { background: #FEE2E2; color: #DC2626; }
+  .badge-skipped { background: #F1F2F9; color: #6B7089; }
+
+  .badge-revision { padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
+  .badge-pending { background: #FEF3C7; color: #D97706; }
+  .badge-inprogress { background: #DBEAFE; color: #2563EB; }
+  .badge-mastered { background: #DCFCE7; color: #16A34A; }
+
+  .alert-msg { background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; border-radius: 12px; padding: 12px 16px; font-size: 13.5px; margin-bottom: 20px; }
+
+  .form-label-sm { font-size: 12.5px; font-weight: 600; margin-bottom: 5px; color: var(--text-dark); }
+  .form-control-sm-custom, .form-select-sm-custom { border-radius: 9px; border: 1.5px solid var(--border); padding: 8px 11px; font-size: 13px; }
+  .form-control-sm-custom:focus, .form-select-sm-custom:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); outline: none; }
+
+  .qentry-table input, .qentry-table select { width: 100%; border-radius: 8px; border: 1.5px solid var(--border); padding: 6px 8px; font-size: 12.5px; }
+  .qentry-table input:focus, .qentry-table select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.12); outline: none; }
+  .qentry-table th { font-size: 11px; text-transform: uppercase; color: var(--text-muted); padding: 6px 6px; white-space: nowrap; }
+  .qentry-table td { padding: 4px 6px; }
+
+  .tab-btn { border: none; background: none; padding: 9px 16px; font-size: 13.5px; font-weight: 600; color: var(--text-muted); border-radius: 10px; }
+  .tab-btn.active { background: var(--primary); color: #fff; }
+
+  .empty-state { text-align: center; padding: 50px 20px; color: var(--text-muted); }
+  .empty-state .icon { font-size: 38px; margin-bottom: 12px; }
+
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main-content { margin-left: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ================= SIDEBAR ================= -->
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">N</div>
+      <div class="sidebar-brand-text">NEET Insight<small>Performance System</small></div>
+    </div>
+
+    <a href="/app?page=dashboard" class="nav-link-item <%= page === 'dashboard' ? 'active' : '' %>"><span class="icon">▦</span> Dashboard</a>
+    <a href="/app?page=tests" class="nav-link-item <%= page === 'tests' ? 'active' : '' %>"><span class="icon">▤</span> Tests</a>
+    <a href="/app?page=test_detail<%= test_id ? '&test_id=' + test_id : '' %>" class="nav-link-item <%= page === 'test_detail' ? 'active' : '' %>"><span class="icon">▥</span> Questions</a>
+    <a href="/app?page=analytics" class="nav-link-item <%= page === 'analytics' ? 'active' : '' %>"><span class="icon">◈</span> Analytics</a>
+    <a href="/app?page=mistakes" class="nav-link-item <%= page === 'mistakes' ? 'active' : '' %>"><span class="icon">✕</span> Mistakes</a>
+    <a href="/app?page=revision" class="nav-link-item <%= page === 'revision' ? 'active' : '' %>"><span class="icon">↻</span> Revision</a>
+    <a href="/app?page=progress" class="nav-link-item <%= page === 'progress' ? 'active' : '' %>"><span class="icon">📈</span> Progress</a>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <strong><%= user.full_name %></strong>
+        <%= user.email %> &middot; <%= user.role %>
+      </div>
+      <a href="/logout" class="nav-link-item"><span class="icon">⎋</span> Logout</a>
+    </div>
+  </div>
+
+  <!-- ================= MAIN CONTENT ================= -->
+  <div class="main-content">
+
+    <% if (msg) { %>
+      <div class="alert-msg"><%= msg %></div>
+    <% } %>
+
+    <%
+      // ==============================================================
+      // helper: safe status badge class
+      // ==============================================================
+      function statusBadgeClass(status) {
+        if (status === 'Correct') return 'badge-correct';
+        if (status === 'Wrong') return 'badge-wrong';
+        return 'badge-skipped';
+      }
+      function revisionBadgeClass(status) {
+        if (status === 'Mastered') return 'badge-mastered';
+        if (status === 'In Progress') return 'badge-inprogress';
+        return 'badge-pending';
+      }
+      function fmtDate(d) {
+        if (!d) return '—';
+        const dt = new Date(d);
+        return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      }
+    %>
+
+    <!-- ============================================================ -->
+    <!-- PAGE: DASHBOARD                                               -->
+    <!-- ============================================================ -->
+    <% if (page === 'dashboard') { %>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Dashboard</h1>
+          <div class="page-subtitle">Overview of your NEET preparation performance</div>
+        </div>
+        <a href="/app?page=tests" class="btn-primary-custom">+ New Test</a>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Tests</div>
+          <div class="kpi-value"><%= total_tests %></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total Questions</div>
+          <div class="kpi-value"><%= total_questions %></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Accuracy</div>
+          <div class="kpi-value positive"><%= accuracy %>%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Negative Marks</div>
+          <div class="kpi-value negative">-<%= negative_marks %></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Opportunity Loss</div>
+          <div class="kpi-value negative"><%= opportunity_loss %></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Predicted Score</div>
+          <div class="kpi-value"><%= predicted_score %></div>
+        </div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Accuracy Trend</h3>
+          <canvas id="accuracyTrendChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Subject Performance</h3>
+          <canvas id="subjectPerfChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-grid" style="grid-template-columns: 1fr;">
+        <div class="chart-card">
+          <h3>Mistake Distribution</h3>
+          <canvas id="mistakeDistChart" style="max-height:260px;"></canvas>
+        </div>
+      </div>
+
+      <script>
+        const accuracyTrendData = <%- JSON.stringify(accuracy_trend) %>;
+        const subjectPerfData = <%- JSON.stringify(subject_performance) %>;
+        const mistakeDistData = <%- JSON.stringify(mistake_distribution) %>;
+
+        new Chart(document.getElementById('accuracyTrendChart'), {
+          type: 'line',
+          data: {
+            labels: accuracyTrendData.map(d => d.test_name),
+            datasets: [{
+              label: 'Accuracy %',
+              data: accuracyTrendData.map(d => d.accuracy),
+              borderColor: '#6366F1',
+              backgroundColor: 'rgba(99,102,241,0.12)',
+              fill: true, tension: 0.35, pointRadius: 3
+            }]
+          },
+          options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+
+        new Chart(document.getElementById('subjectPerfChart'), {
+          type: 'bar',
+          data: {
+            labels: subjectPerfData.map(d => d.subject),
+            datasets: [{
+              label: 'Accuracy %',
+              data: subjectPerfData.map(d => d.accuracy),
+              backgroundColor: '#818CF8',
+              borderRadius: 6
+            }]
+          },
+          options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+
+        new Chart(document.getElementById('mistakeDistChart'), {
+          type: 'doughnut',
+          data: {
+            labels: mistakeDistData.map(d => d.mistake_type),
+            datasets: [{
+              data: mistakeDistData.map(d => d.count),
+              backgroundColor: ['#F87171','#FBBF24','#818CF8','#34D399','#A78BFA','#F472B6','#60A5FA']
+            }]
+          },
+          options: { responsive: true, plugins: { legend: { position: 'right' } } }
+        });
+      </script>
+
+    <% } %>
+
+    <!-- ============================================================ -->
+    <!-- PAGE: TESTS                                                   -->
+    <!-- ============================================================ -->
+    <% if (page === 'tests') { %>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Tests</h1>
+          <div class="page-subtitle">All recorded tests</div>
+        </div>
+        <button type="button" class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#newTestModal">+ New Test</button>
+      </div>
+
+      <div class="card-box">
+        <% if (tests_with_metrics.length === 0) { %>
+          <div class="empty-state">
+            <div class="icon">▤</div>
+            <div>No tests recorded yet. Create your first test to get started.</div>
+          </div>
+        <% } else { %>
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Test Name</th><th>Date</th><th>Type</th><th>Questions</th>
+                <th>Accuracy</th><th>Score</th><th>Neg. Marks</th><th>Opp. Loss</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <% tests_with_metrics.forEach(t => { %>
+                <tr>
+                  <td><strong><%= t.test_name %></strong></td>
+                  <td><%= fmtDate(t.date) %></td>
+                  <td><%= t.type %></td>
+                  <td><%= t.metrics.total %></td>
+                  <td><%= t.metrics.accuracy %>%</td>
+                  <td><%= t.metrics.score %></td>
+                  <td style="color:var(--danger)">-<%= t.metrics.negative_marks %></td>
+                  <td style="color:var(--warning)"><%= t.metrics.opportunity_loss %></td>
+                  <td>
+                    <a href="/app?page=test_detail&test_id=<%= t._id %>" class="btn btn-sm btn-outline-primary">Open</a>
+                    <form action="/app" method="POST" style="display:inline" onsubmit="return confirm('Delete this test and all its questions?');">
+                      <input type="hidden" name="action" value="delete_test">
+                      <input type="hidden" name="test_id" value="<%= t._id %>">
+                      <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } %>
+      </div>
+
+      <!-- New Test Modal -->
+      <div class="modal fade" id="newTestModal" tabindex="-1">
+        <div class="modal-dialog">
+          <div class="modal-content" style="border-radius:16px;">
+            <form action="/app" method="POST">
+              <input type="hidden" name="action" value="create_test">
+              <div class="modal-header">
+                <h5 class="modal-title">Create New Test</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label class="form-label-sm">Test Name</label>
+                  <input type="text" name="test_name" class="form-control form-control-sm-custom" required placeholder="e.g. NEET Full Mock 12">
+                </div>
+                <div class="row">
+                  <div class="col-6 mb-3">
+                    <label class="form-label-sm">Date</label>
+                    <input type="date" name="date" class="form-control form-control-sm-custom" value="<%= new Date().toISOString().slice(0,10) %>">
+                  </div>
+                  <div class="col-6 mb-3">
+                    <label class="form-label-sm">Type</label>
+                    <select name="type" class="form-select form-select-sm-custom">
+                      <option value="Full Syllabus">Full Syllabus</option>
+                      <option value="Subject Wise">Subject Wise</option>
+                      <option value="Chapter Wise">Chapter Wise</option>
+                      <option value="Sectional">Sectional</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-6 mb-3">
+                    <label class="form-label-sm">Duration (minutes)</label>
+                    <input type="number" name="duration" class="form-control form-control-sm-custom" value="180">
+                  </div>
+                  <div class="col-6 mb-3">
+                    <label class="form-label-sm">Total Questions</label>
+                    <input type="number" name="total_questions" class="form-control form-control-sm-custom" value="180">
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label-sm">Source</label>
+                  <input type="text" name="source" class="form-control form-control-sm-custom" placeholder="e.g. Allen Test Series">
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn-primary-custom">Create Test</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    <% } %>
+
+    <!-- ============================================================ -->
+    <!-- PAGE: TEST DETAIL (Question Entry)                           -->
+    <!-- ============================================================ -->
+    <% if (page === 'test_detail') { %>
+
+      <% if (!current_test) { %>
+        <div class="page-header">
+          <div><h1 class="page-title">Test Detail</h1><div class="page-subtitle">No test selected</div></div>
+        </div>
+        <div class="card-box">
+          <div class="empty-state">
+            <div class="icon">▥</div>
+            <div>Select a test from the <a href="/app?page=tests">Tests</a> page to enter questions.</div>
+          </div>
+        </div>
+      <% } else { %>
+
+        <div class="page-header">
+          <div>
+            <h1 class="page-title"><%= current_test.test_name %></h1>
+            <div class="page-subtitle"><%= fmtDate(current_test.date) %> &middot; <%= current_test.type %> &middot; <%= current_test.total_questions %> questions</div>
+          </div>
+          <a href="/app?page=tests" class="btn btn-outline-secondary btn-sm">← Back to Tests</a>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-label">Attempted</div><div class="kpi-value"><%= test_metrics.attempted %>/<%= test_metrics.total %></div></div>
+          <div class="kpi-card"><div class="kpi-label">Correct</div><div class="kpi-value positive"><%= test_metrics.correct %></div></div>
+          <div class="kpi-card"><div class="kpi-label">Wrong</div><div class="kpi-value negative"><%= test_metrics.wrong %></div></div>
+          <div class="kpi-card"><div class="kpi-label">Accuracy</div><div class="kpi-value"><%= test_metrics.accuracy %>%</div></div>
+          <div class="kpi-card"><div class="kpi-label">Score</div><div class="kpi-value"><%= test_metrics.score %></div></div>
+          <div class="kpi-card"><div class="kpi-label">Opportunity Loss</div><div class="kpi-value negative"><%= test_metrics.opportunity_loss %></div></div>
+        </div>
+
+        <% if (test_subject_breakdown.length > 0) { %>
+        <div class="card-box">
+          <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;">Subject Breakdown</h3>
+          <table class="table-custom">
+            <thead><tr><th>Subject</th><th>Total</th><th>Correct</th><th>Wrong</th><th>Skipped</th><th>Accuracy</th><th>Score</th></tr></thead>
+            <tbody>
+              <% test_subject_breakdown.forEach(s => { %>
+                <tr>
+                  <td><strong><%= s.subject %></strong></td><td><%= s.total %></td>
+                  <td style="color:var(--success)"><%= s.correct %></td>
+                  <td style="color:var(--danger)"><%= s.wrong %></td>
+                  <td><%= s.skipped %></td><td><%= s.accuracy %>%</td><td><%= s.score %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <% } %>
+
+        <div class="card-box">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+            <h3 style="font-size:14px;font-weight:700;margin:0;">Question Entry</h3>
+            <div>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addQuestionRows(10)">+ Add 10 Rows</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="autoFillRepetition()">Auto-fill Repetition</button>
+              <button type="button" class="btn-primary-custom btn-sm" onclick="submitQuestions()">Save Questions</button>
+            </div>
+          </div>
+          <div class="page-subtitle" style="margin-bottom:12px;">Tip: Use <strong>Tab</strong> to move across fields and <strong>Enter</strong> to jump to the next row's first field.</div>
+
+          <form id="questionsForm" action="/app" method="POST">
+            <input type="hidden" name="action" value="save_questions">
+            <input type="hidden" name="test_id" value="<%= test_id %>">
+            <input type="hidden" name="questions_json" id="questionsJsonInput">
+
+            <div style="overflow-x:auto;">
+              <table class="table-custom qentry-table" id="qEntryTable">
+                <thead>
+                  <tr>
+                    <th style="width:60px;">Q.No</th>
+                    <th style="width:120px;">Subject</th>
+                    <th style="width:150px;">Chapter</th>
+                    <th style="width:150px;">Topic</th>
+                    <th style="width:90px;">Difficulty</th>
+                    <th style="width:70px;">Correct Ans</th>
+                    <th style="width:70px;">Student Ans</th>
+                    <th style="width:100px;">Status</th>
+                    <th style="width:90px;">Confidence</th>
+                    <th style="width:80px;">Time (s)</th>
+                    <th style="width:130px;">Mistake Type</th>
+                    <th style="width:140px;">Notes</th>
+                  </tr>
+                </thead>
+                <tbody id="qEntryBody">
+                  <%
+                    // Build a map of existing questions by question_no for pre-fill
+                    const qMap = {};
+                    test_questions.forEach(q => { qMap[q.question_no] = q; });
+                    const totalRows = Math.max(current_test.total_questions || 0, test_questions.length, 10);
+                  %>
+                  <% for (let i = 1; i <= totalRows; i++) {
+                       const q = qMap[i] || {};
+                  %>
+                  <tr data-row="<%= i %>">
+                    <td><input type="text" value="<%= i %>" readonly style="background:#F7F8FC;text-align:center;font-weight:600;" class="q-no"></td>
+                    <td><input type="text" class="q-subject" value="<%= q.subject || '' %>" placeholder="Physics"></td>
+                    <td><input type="text" class="q-chapter" value="<%= q.chapter || '' %>" placeholder="Chapter"></td>
+                    <td><input type="text" class="q-topic" value="<%= q.topic || '' %>" placeholder="Topic"></td>
+                    <td>
+                      <select class="q-difficulty">
+                        <option value="Easy" <%= q.difficulty === 'Easy' ? 'selected' : '' %>>Easy</option>
+                        <option value="Medium" <%= (!q.difficulty || q.difficulty === 'Medium') ? 'selected' : '' %>>Medium</option>
+                        <option value="Hard" <%= q.difficulty === 'Hard' ? 'selected' : '' %>>Hard</option>
+                      </select>
+                    </td>
+                    <td><input type="text" class="q-correct" value="<%= q.correct_answer || '' %>" maxlength="1" style="text-align:center;"></td>
+                    <td><input type="text" class="q-student" value="<%= q.student_answer || '' %>" maxlength="1" style="text-align:center;"></td>
+                    <td>
+                      <select class="q-status" onchange="handleStatusChange(this)">
+                        <option value="Skipped" <%= (!q.status || q.status === 'Skipped') ? 'selected' : '' %>>Skipped</option>
+                        <option value="Correct" <%= q.status === 'Correct' ? 'selected' : '' %>>Correct</option>
+                        <option value="Wrong" <%= q.status === 'Wrong' ? 'selected' : '' %>>Wrong</option>
+                      </select>
+                    </td>
+                    <td>
+                      <select class="q-confidence">
+                        <option value="High" <%= q.confidence === 'High' ? 'selected' : '' %>>High</option>
+                        <option value="Medium" <%= (!q.confidence || q.confidence === 'Medium') ? 'selected' : '' %>>Medium</option>
+                        <option value="Low" <%= q.confidence === 'Low' ? 'selected' : '' %>>Low</option>
+                        <option value="Guess" <%= q.confidence === 'Guess' ? 'selected' : '' %>>Guess</option>
+                      </select>
+                    </td>
+                    <td><input type="number" class="q-time" value="<%= q.time_taken || '' %>" placeholder="0"></td>
+                    <td>
+                      <select class="q-mistake">
+                        <option value="">—</option>
+                        <option value="Conceptual" <%= q.mistake_type === 'Conceptual' ? 'selected' : '' %>>Conceptual</option>
+                        <option value="Silly" <%= q.mistake_type === 'Silly' ? 'selected' : '' %>>Silly</option>
+                        <option value="Calculation" <%= q.mistake_type === 'Calculation' ? 'selected' : '' %>>Calculation</option>
+                        <option value="Time Pressure" <%= q.mistake_type === 'Time Pressure' ? 'selected' : '' %>>Time Pressure</option>
+                        <option value="Guessing" <%= q.mistake_type === 'Guessing' ? 'selected' : '' %>>Guessing</option>
+                        <option value="Not Attempted" <%= q.mistake_type === 'Not Attempted' ? 'selected' : '' %>>Not Attempted</option>
+                      </select>
+                    </td>
+                    <td><input type="text" class="q-notes" value="<%= q.notes || '' %>" placeholder="Notes"></td>
+                  </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </form>
+        </div>
+
+      <% } %>
+
+      <script>
+        function handleStatusChange(sel) {
+          const row = sel.closest('tr');
+          const correct = row.querySelector('.q-correct').value.trim().toUpperCase();
+          const student = row.querySelector('.q-student').value.trim().toUpperCase();
+          if (sel.value === 'Skipped') {
+            row.querySelector('.q-student').value = '';
+          }
+        }
+
+        function addQuestionRows(count) {
+          const tbody = document.getElementById('qEntryBody');
+          const existingRows = tbody.querySelectorAll('tr').length;
+          for (let i = 1; i <= count; i++) {
+            const rowNum = existingRows + i;
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-row', rowNum);
+            tr.innerHTML = `
+              <td><input type="text" value="${rowNum}" readonly style="background:#F7F8FC;text-align:center;font-weight:600;" class="q-no"></td>
+              <td><input type="text" class="q-subject" placeholder="Physics"></td>
+              <td><input type="text" class="q-chapter" placeholder="Chapter"></td>
+              <td><input type="text" class="q-topic" placeholder="Topic"></td>
+              <td><select class="q-difficulty"><option value="Easy">Easy</option><option value="Medium" selected>Medium</option><option value="Hard">Hard</option></select></td>
+              <td><input type="text" class="q-correct" maxlength="1" style="text-align:center;"></td>
+              <td><input type="text" class="q-student" maxlength="1" style="text-align:center;"></td>
+              <td><select class="q-status" onchange="handleStatusChange(this)"><option value="Skipped" selected>Skipped</option><option value="Correct">Correct</option><option value="Wrong">Wrong</option></select></td>
+              <td><select class="q-confidence"><option value="High">High</option><option value="Medium" selected>Medium</option><option value="Low">Low</option><option value="Guess">Guess</option></select></td>
+              <td><input type="number" class="q-time" placeholder="0"></td>
+              <td><select class="q-mistake"><option value="">—</option><option value="Conceptual">Conceptual</option><option value="Silly">Silly</option><option value="Calculation">Calculation</option><option value="Time Pressure">Time Pressure</option><option value="Guessing">Guessing</option><option value="Not Attempted">Not Attempted</option></select></td>
+              <td><input type="text" class="q-notes" placeholder="Notes"></td>
+            `;
+            tbody.appendChild(tr);
+          }
+          attachKeyboardNav();
+        }
+
+        function autoFillRepetition() {
+          const rows = document.querySelectorAll('#qEntryBody tr');
+          let lastSubject = '', lastChapter = '', lastTopic = '';
+          rows.forEach(row => {
+            const subjectInput = row.querySelector('.q-subject');
+            const chapterInput = row.querySelector('.q-chapter');
+            const topicInput = row.querySelector('.q-topic');
+            if (subjectInput.value.trim()) { lastSubject = subjectInput.value; }
+            else if (lastSubject) { subjectInput.value = lastSubject; }
+
+            if (chapterInput.value.trim()) { lastChapter = chapterInput.value; }
+            else if (lastChapter) { chapterInput.value = lastChapter; }
+
+            if (topicInput.value.trim()) { lastTopic = topicInput.value; }
+            else if (lastTopic) { topicInput.value = lastTopic; }
+          });
+        }
+
+        function attachKeyboardNav() {
+          const table = document.getElementById('qEntryTable');
+          const inputs = table.querySelectorAll('input, select');
+          inputs.forEach(el => {
+            el.removeEventListener('keydown', handleKeyNav);
+            el.addEventListener('keydown', handleKeyNav);
+          });
+        }
+
+        function handleKeyNav(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const row = e.target.closest('tr');
+            const nextRow = row.nextElementSibling;
+            if (nextRow) {
+              const firstEditable = nextRow.querySelector('.q-subject');
+              if (firstEditable) firstEditable.focus();
+            }
+          }
+        }
+
+        function submitQuestions() {
+          const rows = document.querySelectorAll('#qEntryBody tr');
+          const questions = [];
+          rows.forEach(row => {
+            const qNo = row.querySelector('.q-no').value;
+            const subject = row.querySelector('.q-subject').value;
+            const status = row.querySelector('.q-status').value;
+            const correct = row.querySelector('.q-correct').value;
+            const student = row.querySelector('.q-student').value;
+            // Skip completely empty rows with default skipped status and no data at all
+            if (!subject && !correct && !student && status === 'Skipped') return;
+            questions.push({
+              question_no: qNo,
+              subject: subject,
+              chapter: row.querySelector('.q-chapter').value,
+              topic: row.querySelector('.q-topic').value,
+              difficulty: row.querySelector('.q-difficulty').value,
+              correct_answer: correct,
+              student_answer: student,
+              status: status,
+              confidence: row.querySelector('.q-confidence').value,
+              time_taken: row.querySelector('.q-time').value || 0,
+              mistake_type: row.querySelector('.q-mistake').value,
+              notes: row.querySelector('.q-notes').value
+            });
+          });
+          document.getElementById('questionsJsonInput').value = JSON.stringify(questions);
+          document.getElementById('questionsForm').submit();
+        }
+
+        attachKeyboardNav();
+      </script>
+
+    <% } %>
+
+    <!-- ============================================================ -->
+    <!-- PAGE: ANALYTICS                                               -->
+    <!-- ============================================================ -->
+    <% if (page === 'analytics') { %>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Analytics</h1>
+          <div class="page-subtitle">Subject, chapter and topic-level performance breakdown</div>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;">Subject-wise Analysis</h3>
+        <% if (subject_analysis.length === 0) { %>
+          <div class="empty-state"><div>No question data yet.</div></div>
+        <% } else { %>
+          <table class="table-custom">
+            <thead><tr><th>Subject</th><th>Total</th><th>Correct</th><th>Wrong</th><th>Skipped</th><th>Accuracy</th><th>Score</th><th>Opp. Loss</th></tr></thead>
+            <tbody>
+              <% subject_analysis.forEach(s => { %>
+                <tr>
+                  <td><strong><%= s.subject %></strong></td><td><%= s.total %></td>
+                  <td style="color:var(--success)"><%= s.correct %></td>
+                  <td style="color:var(--danger)"><%= s.wrong %></td>
+                  <td><%= s.skipped %></td><td><%= s.accuracy %>%</td><td><%= s.score %></td>
+                  <td style="color:var(--warning)"><%= s.opportunity_loss %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } %>
+      </div>
+
+      <div class="card-box">
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;">Chapter-wise Analysis</h3>
+        <% if (chapter_analysis.length === 0) { %>
+          <div class="empty-state"><div>No question data yet.</div></div>
+        <% } else { %>
+          <table class="table-custom">
+            <thead><tr><th>Subject</th><th>Chapter</th><th>Total</th><th>Correct</th><th>Wrong</th><th>Accuracy</th></tr></thead>
+            <tbody>
+              <% chapter_analysis.forEach(c => { %>
+                <tr>
+                  <td><%= c.subject %></td><td><strong><%= c.chapter %></strong></td><td><%= c.total %></td>
+                  <td style="color:var(--success)"><%= c.correct %></td>
+                  <td style="color:var(--danger)"><%= c.wrong %></td>
+                  <td><%= c.accuracy %>%</td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } %>
+      </div>
+
+      <div class="card-box">
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;">Topic-wise Analysis</h3>
+        <% if (topic_analysis.length === 0) { %>
+          <div class="empty-state"><div>No question data yet.</div></div>
+        <% } else { %>
+          <table class="table-custom">
+            <thead><tr><th>Subject</th><th>Chapter</th><th>Topic</th><th>Total</th><th>Correct</th><th>Wrong</th><th>Accuracy</th></tr></thead>
+            <tbody>
+              <% topic_analysis.forEach(t => { %>
+                <tr>
+                  <td><%= t.subject %></td><td><%= t.chapter %></td><td><strong><%= t.topic %></strong></td><td><%= t.total %></td>
+                  <td style="color:var(--success)"><%= t.correct %></td>
+                  <td style="color:var(--danger)"><%= t.wrong %></td>
+                  <td><%= t.accuracy %>%</td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } %>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card-box">
+            <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;">Add Master Chapter</h3>
+            <form action="/app" method="POST">
+              <input type="hidden" name="action" value="add_chapter">
+              <div class="mb-2"><label class="form-label-sm">Subject</label><input type="text" name="subject" class="form-control form-control-sm-custom" required></div>
+              <div class="mb-2"><label class="form-label-sm">Chapter</label><input type="text" name="chapter" class="form-control form-control-sm-custom" required></div>
+              <div class="row">
+                <div class="col-6 mb-2"><label class="form-label-sm">Class</label>
+                  <select name="class" class="form-select form-select-sm-custom"><option value="11">11</option><option value="12">12</option></select>
+                </div>
+                <div class="col-6 mb-2"><label class="form-label-sm">Weightage (%)</label><input type="number" name="weightage" class="form-control form-control-sm-custom" step="0.1"></div>
+              </div>
+              <button type="submit" class="btn-primary-custom btn-sm mt-2">Add Chapter</button>
+            </form>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card-box">
+            <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;">Add Master Topic</h3>
+            <form action="/app" method="POST">
+              <input type="hidden" name="action" value="add_topic">
+              <div class="mb-2"><label class="form-label-sm">Subject</label><input type="text" name="subject" class="form-control form-control-sm-custom" required></div>
+              <div class="mb-2"><label class="form-label-sm">Chapter</label><input type="text" name="chapter" class="form-control form-control-sm-custom" required></div>
+              <div class="mb-2"><label class="form-label-sm">Topic</label><input type="text" name="topic" class="form-control form-control-sm-custom" required></div>
+              <button type="submit" class="btn-primary-custom btn-sm mt-2">Add Topic</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <% if (master_chapters.length > 0) { %>
+      <div class="card-box">
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;">Master Chapter List</h3>
+        <table class="table-custom">
+          <thead><tr><th>Subject</th><th>Chapter</th><th>Class</th><th>Weightage</th></tr></thead>
+          <tbody>
+            <% master_chapters.forEach(c => { %>
+              <tr><td><%= c.subject %></td><td><%= c.chapter %></td><td><%= c.class %></td><td><%= c.weightage %>%</td></tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <% } %>
+
+    <% } %>
+
+    <!-- ============================================================ -->
+    <!-- PAGE: MISTAKES                                                -->
+    <!-- ============================================================ -->
+    <% if (page === 'mistakes') { %>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Mistake Notebook</h1>
+          <div class="page-subtitle">Auto-generated from wrong answers across all tests</div>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <% if (mistakes.length === 0) { %>
+          <div class="empty-state">
+            <div class="icon">✕</div>
+            <div>No mistakes recorded yet. They'll appear here automatically when you mark a question as Wrong.</div>
+          </div>
+        <% } else { %>
+          <table class="table-custom">
+            <thead>
+              <tr><th>Date</th><th>Subject</th><th>Chapter</th><th>Topic</th><th>Q.No</th><th>Mistake Type</th><th>Revision Status</th><th>Next Revision</th><th></th></tr>
+            </thead>
+            <tbody>
+              <% mistakes.forEach(m => { %>
+                <tr>
+                  <td><%= fmtDate(m.date) %></td>
+                  <td><%= m.subject %></td>
+                  <td><%= m.chapter %></td>
+                  <td><%= m.topic %></td>
+                  <td>#<%= m.question %></td>
+                  <td><%= m.mistake_type %></td>
+                  <td><span class="badge-revision <%= revisionBadgeClass(m.revision_status) %>"><%= m.revision_status %></span></td>
+                  <td><%= fmtDate(m.next_revision_date) %></td>
+                  <td>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#mistakeModal-<%= m._id %>">Update</button>
+                  </td>
+                </tr>
+
+                <div class="modal fade" id="mistakeModal-<%= m._id %>" tabindex="-1">
+                  <div class="modal-dialog">
+                    <div class="modal-content" style="border-radius:16px;">
+                      <form action="/app" method="POST">
+                        <input type="hidden" name="action" value="update_mistake">
+                        <input type="hidden" name="mistake_id" value="<%= m._id %>">
+                        <div class="modal-header">
+                          <h5 class="modal-title">Update Mistake — Q#<%= m.question %></h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="mb-3">
+                            <label class="form-label-sm">Correct Concept / Notes</label>
+                            <textarea name="correct_concept" class="form-control form-control-sm-custom" rows="3"><%= m.correct_concept %></textarea>
+                          </div>
+                          <div class="mb-3">
+                            <label class="form-label-sm">Revision Status</label>
+                            <select name="revision_status" class="form-select form-select-sm-custom">
+                              <option value="Pending" <%= m.revision_status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                              <option value="In Progress" <%= m.revision_status === 'In Progress' ? 'selected' : '' %>>In Progress</option>
+                              <option value="Mastered" <%= m.revision_status === 'Mastered' ? 'selected' : '' %>>Mastered</option>
+                            </select>
+                          </div>
+                          <div class="mb-3">
+                            <label class="form-label-sm">Next Revision Date</label>
+                            <input type="date" name="next_revision_date" class="form-control form-control-sm-custom" value="<%= m.next_revision_date ? new Date(m.next_revision_date).toISOString().slice(0,10) : '' %>">
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                          <button type="submit" class="btn-primary-custom">Save Changes</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } %>
+      </div>
+
+    <% } %>
+
+    <!-- ============================================================ -->
+    <!-- PAGE: REVISION                                                -->
+    <!-- ============================================================ -->
+    <% if (page === 'revision') { %>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Revision</h1>
+          <div class="page-subtitle">Spaced repetition schedule: Day 1, 3, 7, 15, 30, 60</div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kpi-label">Overdue</div><div class="kpi-value negative"><%= overdue.length %></div></div>
+        <div class="kpi-card"><div class="kpi-label">Due Today</div><div class="kpi-value" style="color:var(--warning)"><%= due_today.length %></div></div>
+        <div class="kpi-card"><div class="kpi-label">Upcoming</div><div class="kpi-value"><%= upcoming.length %></div></div>
+        <div class="kpi-card"><div class="kpi-label">Completed</div><div class="kpi-value positive"><%= completed.length %></div></div>
+      </div>
+
+      <div class="card-box">
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;color:var(--danger);">Overdue</h3>
+        <%- (function(){ 
+          let html = '';
+          if (overdue.length === 0) { html = '<div class="empty-state"><div>Nothing overdue. Great job staying on track.</div></div>'; }
+          else {
+            html += '<table class="table-custom"><thead><tr><th>Due Date</th><th>Subject</th><th>Chapter</th><th>Topic</th><th>Q.No</th><th>Status</th><th></th></tr></thead><tbody>';
+            overdue.forEach(r => {
+              html += '<tr>';
+              html += '<td>' + fmtDate(r.due_date) + '</td>';
+              html += '<td>' + (r.question_id ? r.question_id.subject : '—') + '</td>';
+              html += '<td>' + (r.question_id ? r.question_id.chapter : '—') + '</td>';
+              html += '<td>' + (r.question_id ? r.question_id.topic : '—') + '</td>';
+              html += '<td>' + (r.question_id ? '#' + r.question_id.question_no : '—') + '</td>';
+              html += '<td><span class="badge-status badge-wrong">' + r.status + '</span></td>';
+              html += '<td><form action="/app" method="POST" style="display:inline"><input type="hidden" name="action" value="update_revision"><input type="hidden" name="revision_id" value="' + r._id + '"><input type="hidden" name="status" value="Completed"><button type="submit" class="btn btn-sm btn-outline-success">Mark Done</button></form></td>';
+              html += '</tr>';
+            });
+            html += '</tbody></table>';
+          }
+          return html;
+        })() %>
+      </div>
+
+      <div class="card-box">
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;color:var(--warning);">Due Today</h3>
+        <%- (function(){ 
+          let html = '';
+          if (due_today.length === 0) { html = '<div class="empty-state"><div>Nothing due today.</div></div>'; }
+          else {
+            html += '<table class="table-custom"><thead><tr><th>Due Date</th><th>Subject</th><th>Chapter</th><th>Topic</th><th>Q.No</th><th>Status</th><th></th></tr></thead><tbody>';
+            due_today.forEach(r => {
+              html += '<tr>';
+              html += '<td>' + fmtDate(r.due_date) + '</td>';
+              html += '<td>' + (r.question_id ? r.question_id.subject : '—') + '</td>';
+              html += '<td>' + (r.question_id ? r.question_id.chapter : '—') + '</td>';
+              html += '<td>' + (r.question_id ? r.question_id.topic : '—') + '</td>';
+              html += '<td>' + (r.question_id ? '#' + r.question_id.question_no : '—') + '</td>';
+              html += '<td><span class="badge-status badge-wrong">' + r.status + '</span></td>';
+              html += '<td><form action="/app" method="POST" style="display:inline"><input type="hidden" name="action" value="update_revision"><input type="hidden" name="revision_id" value="' + r._id + '"><input type="hidden" name="status" value="Completed"><button type="submit" class="btn btn-sm btn-outline-success">Mark Done</button></form></td>';
+              html += '</tr>';
+            });
+            html += '</tbody></table>';
+          }
+          return html;
+        })() %>
+      </div>
+
+      <div class="card-box">
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;">Upcoming</h3>
+        <%- (function(){ 
+          let html = '';
+          if (upcoming.length === 0) { html = '<div class="empty-state"><div>No upcoming revisions scheduled.</div></div>'; }
+          else {
+            html += '<table class="table-custom"><thead><tr><th>Due Date</th><th>Subject</th><th>Chapter</th><th>Topic</th><th>Q.No</th><th>Status</th></tr></thead><tbody>';
+            upcoming.forEach(r => {
+              html += '<tr>';
+              html += '<td>' + fmtDate(r.due_date) + '</td>';
+              html += '<td>' + (r.question_id ? r.question_id.subject : '—') + '</td>';
+              html += '<td>' + (r.question_id ? r.question_id.chapter : '—') + '</td>';
+              html += '<td>' + (r.question_id ? r.question_id.topic : '—') + '</td>';
+              html += '<td>' + (r.question_id ? '#' + r.question_id.question_no : '—') + '</td>';
+              html += '<td><span class="badge-status badge-skipped">' + r.status + '</span></td>';
+              html += '</tr>';
+            });
+            html += '</tbody></table>';
+          }
+          return html;
+        })() %>
+      </div>
+
+      <div class="card-box">
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;color:var(--success);">Completed</h3>
+        <%- (function(){ 
+          let html = '';
+          if (completed.length === 0) { html = '<div class="empty-state"><div>No completed revisions yet.</div></div>'; }
+          else {
+            html += '<table class="table-custom"><thead><tr><th>Due Date</th><th>Subject</th><th>Chapter</th><th>Topic</th><th>Q.No</th><th>Status</th></tr></thead><tbody>';
+            completed.forEach(r => {
+              html += '<tr>';
+              html += '<td>' + fmtDate(r.due_date) + '</td>';
+              html += '<td>' + (r.question_id ? r.question_id.subject : '—') + '</td>';
+              html += '<td>' + (r.question_id ? r.question_id.chapter : '—') + '</td>';
+              html += '<td>' + (r.question_id ? r.question_id.topic : '—') + '</td>';
+              html += '<td>' + (r.question_id ? '#' + r.question_id.question_no : '—') + '</td>';
+              html += '<td><span class="badge-status badge-correct">' + r.status + '</span></td>';
+              html += '</tr>';
+            });
+            html += '</tbody></table>';
+          }
+          return html;
+        })() %>
+      </div>
+
+    <% } %>
+
+    <!-- ============================================================ -->
+    <!-- PAGE: PROGRESS                                                -->
+    <!-- ============================================================ -->
+    <% if (page === 'progress') { %>
+
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Progress</h1>
+          <div class="page-subtitle">Weekly and monthly performance trends</div>
+        </div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h3>Accuracy Trend (per test)</h3>
+          <canvas id="progressAccuracyChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <h3>Score Trend (per test)</h3>
+          <canvas id="progressScoreChart"></canvas>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="card-box">
+            <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;">Weekly Progress</h3>
+            <% if (weekly_progress.length === 0) { %>
+              <div class="empty-state"><div>No weekly data yet.</div></div>
+            <% } else { %>
+              <table class="table-custom">
+                <thead><tr><th>Week Of</th><th>Tests</th><th>Avg Accuracy</th><th>Avg Score</th></tr></thead>
+                <tbody>
+                  <% weekly_progress.forEach(w => { %>
+                    <tr><td><%= fmtDate(w.week) %></td><td><%= w.tests %></td><td><%= w.avg_accuracy %>%</td><td><%= w.avg_score %></td></tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            <% } %>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card-box">
+            <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;">Monthly Progress</h3>
+            <% if (monthly_progress.length === 0) { %>
+              <div class="empty-state"><div>No monthly data yet.</div></div>
+            <% } else { %>
+              <table class="table-custom">
+                <thead><tr><th>Month</th><th>Tests</th><th>Avg Accuracy</th><th>Avg Score</th></tr></thead>
+                <tbody>
+                  <% monthly_progress.forEach(m => { %>
+                    <tr><td><%= m.month_label %></td><td><%= m.tests %></td><td><%= m.avg_accuracy %>%</td><td><%= m.avg_score %></td></tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        const progressTrendData = <%- JSON.stringify(progress_trend) %>;
+
+        new Chart(document.getElementById('progressAccuracyChart'), {
+          type: 'line',
+          data: {
+            labels: progressTrendData.map(d => d.test_name),
+            datasets: [{
+              label: 'Accuracy %',
+              data: progressTrendData.map(d => d.accuracy),
+              borderColor: '#16A34A',
+              backgroundColor: 'rgba(22,163,74,0.12)',
+              fill: true, tension: 0.35, pointRadius: 3
+            }]
+          },
+          options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100 } } }
+        });
+
+        new Chart(document.getElementById('progressScoreChart'), {
+          type: 'line',
+          data: {
+            labels: progressTrendData.map(d => d.test_name),
+            datasets: [{
+              label: 'Score',
+              data: progressTrendData.map(d => d.score),
+              borderColor: '#6366F1',
+              backgroundColor: 'rgba(99,102,241,0.12)',
+              fill: true, tension: 0.35, pointRadius: 3
+            }]
+          },
+          options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+      </script>
+
+    <% } %>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
